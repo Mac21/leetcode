@@ -1,4 +1,4 @@
-module github.com/mac21/leetcode/skeleton
+module github.com/mac21/leetcode/findthecity
 
 go 1.22.5
 
