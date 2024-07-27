@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 /*
 Problem description:
     There are n cities numbered from 0 to n - 1.
@@ -23,43 +25,114 @@ type Neighbor struct {
 	Weight int
 }
 
-type City struct {
-	number    int
-	neighbors []Neighbor
-	weight    int
+func (n Neighbor) String() string {
+    return fmt.Sprintf("City %d:%d", n.City.Number, n.Weight)
 }
 
-func (c City) AddNeighbor(n *City, weight int) {
+type City struct {
+	Number    int
+	neighbors []Neighbor
+}
+
+func (c *City) String() string {
+    if c == nil {
+        return "nil"
+    }
+
+    return fmt.Sprintf("City %d -> %v\n", c.Number, c.neighbors)
+}
+
+func (c *City) NumNeighbors() int {
+    if c == nil {
+        return 0
+    }
+
+    return len(c.neighbors)
+}
+
+func (c *City) AddNeighbor(n *City, weight int) {
 	c.neighbors = append(c.neighbors, Neighbor{
 		City:   n,
 		Weight: weight,
 	})
 }
 
+func (c *City) Neighbors() []Neighbor {
+    if c == nil {
+        return nil
+    }
+
+    return c.neighbors
+}
+
+func (c *City) HasNeighbor(cn int) bool {
+    if c == nil {
+        return false
+    }
+
+    if c.Number == cn {
+        return true
+    }
+
+    for _, nb := range c.neighbors {
+       if nb.City.Number == cn {
+           return true
+       }
+    }
+    return false
+}
+
+
 func NewCity(number int) *City {
 	return &City{
-		number:    number,
+		Number:    number,
 		neighbors: make([]Neighbor, 0),
 	}
 }
 
 func findTheCity(n int, edges [][]int, distanceThreshold int) int {
-	cities := make([]*City, 0)
+	cities := make([]*City, n)
 	for i := 0; i < n; i++ {
 		cities[i] = NewCity(i)
 	}
 
 	for i := 0; i < n; i++ {
-		from, to, weight := edges[i][0], edges[i][1], edges[i][2]
-		if weight < distanceThreshold {
-			fromCity := cities[from]
-			toCity := cities[to]
-			fromCity.AddNeighbor(toCity, weight)
-			toCity.AddNeighbor(fromCity, weight)
+		fromi, toi, weighti := edges[i][0], edges[i][1], edges[i][2]
+        ifromCity := cities[fromi]
+        itoCity := cities[toi]
+		if weighti <= distanceThreshold {
+			ifromCity.AddNeighbor(itoCity, weighti)
+			itoCity.AddNeighbor(ifromCity, weighti)
 		}
 	}
 
+    for i := 0; i < n; i++ {
+        city := cities[i]
+        for _, nb := range city.Neighbors() {
+            for _, pnb := range nb.City.Neighbors() {
+                if (nb.Weight + pnb.Weight) <= distanceThreshold {
+                    if !city.HasNeighbor(pnb.City.Number) {
+                        city.AddNeighbor(pnb.City, nb.Weight + pnb.Weight)
+                    }
+
+                    if !pnb.City.HasNeighbor(city.Number) {
+                        pnb.City.AddNeighbor(city, nb.Weight + pnb.Weight)
+                    }
+                }
+            }
+        }
+    }
+
     fmt.Println(cities)
 
-	return n
+    answer := cities[0]
+    for i := 1; i < n; i++ {
+        if answer.NumNeighbors() > cities[i].NumNeighbors() {
+            answer = cities[i]
+        } else if answer.NumNeighbors() == cities[i].NumNeighbors() {
+            answer = cities[i]
+        }
+    }
+
+	return answer.Number
 }
