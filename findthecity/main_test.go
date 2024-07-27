@@ -98,15 +98,66 @@ func TestExample3(t *testing.T) {
 		},
 		DistanceThreshold: 8279,
 	}
-	answer := 0
-	// Explain
-	// the neighboring cities at a DistanceThreshold = 2 for each city are:
-	// City 0 -> [City 1]
-	// City 1 -> [City 0, City 4]
-	// City 2 -> [City 3, City 4]
-	// City 3 -> [City 2, City 4]
-	// City 4 -> [City 1, City 2, City 3]
-	// Cities 0 and 3 have 2 neighboring cities at a DistanceThreshold = 2, but we have to return city 3 since it has the greatest number.
+	answer := 5
+	result := findTheCity(input.N, input.Edges, input.DistanceThreshold)
+	validateTestResults(t, input, answer, result)
+}
+
+func TestExample28(t *testing.T) {
+	input := TestInput{
+		N: 5,
+		Edges: [][]int{
+			{0, 1, 2},
+			{0, 4, 8},
+			{1, 2, 10000},
+			{1, 4, 2},
+			{2, 3, 10000},
+			{3, 4, 1},
+		},
+		DistanceThreshold: 10000,
+	}
+	answer := 2
+	result := findTheCity(input.N, input.Edges, input.DistanceThreshold)
+	validateTestResults(t, input, answer, result)
+}
+
+func TestExample48(t *testing.T) {
+	input := TestInput{
+		N: 9,
+		Edges: [][]int{
+			{0, 6, 7036},
+			{2, 3, 6792},
+			{6, 8, 5813},
+			{0, 2, 5816},
+			{5, 7, 8383},
+			{1, 8, 2429},
+			{0, 4, 2932},
+			{3, 7, 3703},
+			{5, 8, 3760},
+			{4, 5, 973},
+			{3, 6, 5989},
+			{0, 1, 1098},
+			{3, 4, 7315},
+			{5, 6, 5274},
+			{2, 8, 3566},
+			{3, 8, 3590},
+			{4, 7, 4223},
+			{1, 3, 2540},
+			{4, 8, 8536},
+			{1, 2, 6250},
+			{1, 7, 1757},
+			{2, 6, 7826},
+			{3, 5, 31},
+			{1, 5, 7736},
+			{2, 4, 5115},
+			{0, 3, 4301},
+			{0, 7, 4771},
+			{4, 6, 3417},
+			{0, 8, 2176},
+		},
+		DistanceThreshold: 6235,
+	}
+	answer := 6
 	result := findTheCity(input.N, input.Edges, input.DistanceThreshold)
 	validateTestResults(t, input, answer, result)
 }
@@ -144,23 +195,6 @@ func TestExample51(t *testing.T) {
 		DistanceThreshold: 7937,
 	}
 	answer := 7
-	// Explain
-	// the neighboring cities at a DistanceThreshold = 2 for each city are:
-	// City 0 -> [City 1]
-	// City 1 -> [City 0, City 4]
-	// City 2 -> [City 3, City 4]
-	// City 3 -> [City 2, City 4]
-	// City 4 -> [City 1, City 2, City 3]
-	// Cities 0 and 3 have 2 neighboring cities at a DistanceThreshold = 2, but we have to return city 3 since it has the greatest number.
-
-	// City 0 -> (7)[City 1:9258 City 4:5966 City 6:6 City 7:2904 City 5:3399 City 2:3996 City 3:7495]
-	// City 1 -> (7)[City 2:1079 City 3:8040 City 0:9258 City 5:6327 City 7:7782 City 6:2458 City 4:2262]
-	// City 2 -> (7)[City 1:1079 City 5:8604 City 0:3996 City 6:1390 City 3:9119 City 7:8861 City 4:3341]
-	// City 3 -> (7)[City 5:9558 City 1:8040 City 4:7284 City 6:8575 City 7:2336 City 0:7495 City 2:9119]
-	// City 4 -> (7)[City 7:7558 City 3:7284 City 0:5966 City 6:2857 City 5:5055 City 1:2262 City 2:3341]
-	// City 5 -> (7)[City 3:9558 City 6:8196 City 1:6327 City 2:8604 City 7:2870 City 4:5055 City 0:3399]
-	// City 6 -> (7)[City 5:8196 City 3:8575 City 4:2857 City 0:6 City 1:2458 City 7:2202 City 2:1390]
-	// City 7 -> (7)[City 4:7558 City 1:7782 City 3:2336 City 5:2870 City 0:2904 City 6:2202 City 2:8861]
 	result := findTheCity(input.N, input.Edges, input.DistanceThreshold)
 	validateTestResults(t, input, answer, result)
 }

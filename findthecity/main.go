@@ -103,7 +103,7 @@ func (c *City) NeighborsInThreshold(threshold int) []Neighbor {
 
 func (c *City) HasNeighbor(cn, weight int) bool {
 	if c == nil {
-		return false
+		return true
 	}
 
 	if c.Number == cn {
@@ -111,7 +111,7 @@ func (c *City) HasNeighbor(cn, weight int) bool {
 	}
 
 	for _, nb := range c.neighbors {
-		if nb.City.Number == cn && nb.Weight == weight {
+		if nb.City.Number == cn {
 			return true
 		}
 	}
@@ -137,8 +137,8 @@ func findTheCity(n int, edges [][]int, distanceThreshold int) int {
 		fromCity := cities[from]
 		toCity := cities[to]
         if weight <= distanceThreshold {
-            fromCity.AddNeighbor(toCity, weight)
-            toCity.AddNeighbor(fromCity, weight)
+			fromCity.AddNeighbor(toCity, weight)
+			toCity.AddNeighbor(fromCity, weight)
         }
 	}
 
@@ -152,23 +152,33 @@ func findTheCity(n int, edges [][]int, distanceThreshold int) int {
 			queue = queue[1:]
 
 			for _, fnb := range nb.City.Neighbors() {
-                if exists := seen[fnb]; exists {
-                    continue
-                }
+				if exists := seen[fnb]; exists {
+					continue
+				}
+
+				// No point in looking at a node which cost is higher than we can afford
+				if fnb.Weight >= distanceThreshold {
+					continue
+				}
+
+				seen[fnb] = true
+				queue = append(queue, fnb)
+				queue = append(queue, fnb.City.Neighbors()...)
 
 				if (nb.Weight + fnb.Weight) <= distanceThreshold {
 					city.AddNeighbor(fnb.City, nb.Weight+fnb.Weight)
-                    
-                    seen[fnb] = true
-                    queue = append(queue, fnb)
+					fnb.City.AddNeighbor(city, nb.Weight+fnb.Weight)
 				}
 			}
 		}
+		clear(seen)
 	}
 
 	answer := cities[0]
 	for i := 1; i < n; i++ {
-		if cities[i].NumNeighborsInThreshold(distanceThreshold) <= answer.NumNeighborsInThreshold(distanceThreshold) {
+        cityNumNbrs := cities[i].NumNeighborsInThreshold(distanceThreshold)
+        answerNumNbrs := answer.NumNeighborsInThreshold(distanceThreshold)
+		if cityNumNbrs <= answerNumNbrs {
 			answer = cities[i]
 		}
 	}
