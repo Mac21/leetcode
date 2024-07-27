@@ -1,6 +1,8 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 /*
 Problem description:
@@ -26,7 +28,7 @@ type Neighbor struct {
 }
 
 func (n Neighbor) String() string {
-    return fmt.Sprintf("City %d:%d", n.City.Number, n.Weight)
+	return fmt.Sprintf("City %d:%d", n.City.Number, n.Weight)
 }
 
 type City struct {
@@ -35,22 +37,41 @@ type City struct {
 }
 
 func (c *City) String() string {
-    if c == nil {
-        return "nil"
-    }
+	if c == nil {
+		return "nil"
+	}
 
-    return fmt.Sprintf("City %d -> %v\n", c.Number, c.neighbors)
+	return fmt.Sprintf("City %d -> (%d)%v\n", c.Number, c.NumNeighbors(), c.Neighbors())
 }
 
 func (c *City) NumNeighbors() int {
-    if c == nil {
-        return 0
-    }
+	if c == nil {
+		return 0
+	}
 
-    return len(c.neighbors)
+	return len(c.neighbors)
+}
+
+func (c *City) NumNeighborsInThreshold(threshold int) int {
+	if c == nil {
+		return 0
+	}
+
+	res := 0
+	for _, nb := range c.neighbors {
+		if nb.Weight <= threshold {
+			res++
+		}
+	}
+
+	return res
 }
 
 func (c *City) AddNeighbor(n *City, weight int) {
+	if c.HasNeighbor(n.Number, weight) {
+		return
+	}
+
 	c.neighbors = append(c.neighbors, Neighbor{
 		City:   n,
 		Weight: weight,
@@ -58,30 +79,45 @@ func (c *City) AddNeighbor(n *City, weight int) {
 }
 
 func (c *City) Neighbors() []Neighbor {
-    if c == nil {
-        return nil
-    }
+	if c == nil {
+		return nil
+	}
 
-    return c.neighbors
+	return c.neighbors
 }
 
-func (c *City) HasNeighbor(cn int) bool {
-    if c == nil {
-        return false
-    }
+func (c *City) NeighborsInThreshold(threshold int) []Neighbor {
+	if c == nil {
+		return nil
+	}
 
-    if c.Number == cn {
-        return true
-    }
+	res := make([]Neighbor, 0)
+	for _, nb := range c.Neighbors() {
+		if nb.Weight <= threshold {
+			res = append(res, nb)
+		}
+	}
 
-    for _, nb := range c.neighbors {
-       if nb.City.Number == cn {
-           return true
-       }
-    }
-    return false
+	return res
 }
 
+func (c *City) HasNeighbor(cn, weight int) bool {
+	if c == nil {
+		return false
+	}
+
+	if c.Number == cn {
+		return true
+	}
+
+	for _, nb := range c.neighbors {
+		if nb.City.Number == cn && nb.Weight == weight {
+			return true
+		}
+	}
+
+	return false
+}
 
 func NewCity(number int) *City {
 	return &City{
@@ -96,43 +132,46 @@ func findTheCity(n int, edges [][]int, distanceThreshold int) int {
 		cities[i] = NewCity(i)
 	}
 
+	for i := 0; i < len(edges); i++ {
+		from, to, weight := edges[i][0], edges[i][1], edges[i][2]
+		fromCity := cities[from]
+		toCity := cities[to]
+        if weight <= distanceThreshold {
+            fromCity.AddNeighbor(toCity, weight)
+            toCity.AddNeighbor(fromCity, weight)
+        }
+	}
+
+	queue := make([]Neighbor, 0)
+	seen := make(map[Neighbor]bool)
 	for i := 0; i < n; i++ {
-		fromi, toi, weighti := edges[i][0], edges[i][1], edges[i][2]
-        ifromCity := cities[fromi]
-        itoCity := cities[toi]
-		if weighti <= distanceThreshold {
-			ifromCity.AddNeighbor(itoCity, weighti)
-			itoCity.AddNeighbor(ifromCity, weighti)
+		city := cities[i]
+		queue = append(queue, city.Neighbors()...)
+		for len(queue) > 0 {
+			nb := queue[0]
+			queue = queue[1:]
+
+			for _, fnb := range nb.City.Neighbors() {
+                if exists := seen[fnb]; exists {
+                    continue
+                }
+
+				if (nb.Weight + fnb.Weight) <= distanceThreshold {
+					city.AddNeighbor(fnb.City, nb.Weight+fnb.Weight)
+                    
+                    seen[fnb] = true
+                    queue = append(queue, fnb)
+				}
+			}
 		}
 	}
 
-    for i := 0; i < n; i++ {
-        city := cities[i]
-        for _, nb := range city.Neighbors() {
-            for _, pnb := range nb.City.Neighbors() {
-                if (nb.Weight + pnb.Weight) <= distanceThreshold {
-                    if !city.HasNeighbor(pnb.City.Number) {
-                        city.AddNeighbor(pnb.City, nb.Weight + pnb.Weight)
-                    }
-
-                    if !pnb.City.HasNeighbor(city.Number) {
-                        pnb.City.AddNeighbor(city, nb.Weight + pnb.Weight)
-                    }
-                }
-            }
-        }
-    }
-
-    fmt.Println(cities)
-
-    answer := cities[0]
-    for i := 1; i < n; i++ {
-        if answer.NumNeighbors() > cities[i].NumNeighbors() {
-            answer = cities[i]
-        } else if answer.NumNeighbors() == cities[i].NumNeighbors() {
-            answer = cities[i]
-        }
-    }
+	answer := cities[0]
+	for i := 1; i < n; i++ {
+		if cities[i].NumNeighborsInThreshold(distanceThreshold) <= answer.NumNeighborsInThreshold(distanceThreshold) {
+			answer = cities[i]
+		}
+	}
 
 	return answer.Number
 }
