@@ -1,2 +1,6 @@
 github.com/mac21/gods v0.0.0-20240725202648-4a1ce27345a1 h1:dzEFsciXSFWTIEcx1cunGz7CxrtNka7hprq4hxZRv7I=
 github.com/mac21/gods v0.0.0-20240725202648-4a1ce27345a1/go.mod h1:VjHbpQBFXbcv+2UN2b5JLJd6bFOdSjRngem3ax6SfFY=
+github.com/mac21/gods v0.0.0-20240727191523-97dff9f617dd h1:6Y6I5u/xJncsmMKO1lYxiZC3PwbAKB0YjHOJ54R2DV8=
+github.com/mac21/gods v0.0.0-20240727191523-97dff9f617dd/go.mod h1:VjHbpQBFXbcv+2UN2b5JLJd6bFOdSjRngem3ax6SfFY=
+github.com/mac21/gods v0.0.0-20240728035320-f0472694ae7b h1:+deOL3FdlZUJ01jZPvMzYTOsi7I46KmjA4kSb+c2tCc=
+github.com/mac21/gods v0.0.0-20240728035320-f0472694ae7b/go.mod h1:VjHbpQBFXbcv+2UN2b5JLJd6bFOdSjRngem3ax6SfFY=
