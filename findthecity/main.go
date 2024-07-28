@@ -8,29 +8,31 @@ import (
 
 /*
 Problem description:
-    There are n cities numbered from 0 to n - 1.
-    Given the array edges where edges[i] = [fromi, toi, weighti] represents a bidirectional and weighted edge between cities fromi and toi, and given the integer distanceThreshold.
 
-    Return the city with the smallest number of cities that are reachable through some path and whose distance is at most distanceThreshold.
-    If there are multiple such cities, return the city with the greatest number.
+	There are n cities numbered from 0 to n - 1.
+	Given the array edges where edges[i] = [fromi, toi, weighti] represents a bidirectional and weighted edge between cities fromi and toi, and given the integer distanceThreshold.
 
-    Notice that the distance of a path connecting cities i and j is equal to the sum of the eges' weights along that path.
+	Return the city with the smallest number of cities that are reachable through some path and whose distance is at most distanceThreshold.
+	If there are multiple such cities, return the city with the greatest number.
+
+	Notice that the distance of a path connecting cities i and j is equal to the sum of the eges' weights along that path.
+
 Constraints:
-    2 <= n <= 100
-    1 <= edges.length <= n * (n - 1) / 2
-    edges[i].length == 3
-    0 <= fromi < toi < n
-    1 <= weighti, distanceThreshold <= 10^4
-    All pairs (fromi, toi) are distinct.
-*/
 
+	2 <= n <= 100
+	1 <= edges.length <= n * (n - 1) / 2
+	edges[i].length == 3
+	0 <= fromi < toi < n
+	1 <= weighti, distanceThreshold <= 10^4
+	All pairs (fromi, toi) are distinct.
+*/
 type Neighbor struct {
-	City   *City
+	Number int
 	Weight int
 }
 
 func (n Neighbor) String() string {
-	return fmt.Sprintf("City %d:%d", n.City.Number, n.Weight)
+	return fmt.Sprintf("City %d:%d", n.Number, n.Weight)
 }
 
 type City struct {
@@ -61,7 +63,7 @@ func (c *City) NumNeighborsInThreshold(threshold int) int {
 
 	res := 0
 	for _, nb := range c.neighbors {
-		if nb.Weight <= threshold {
+		if nb != nil && nb.Weight <= threshold {
 			res++
 		}
 	}
@@ -69,41 +71,27 @@ func (c *City) NumNeighborsInThreshold(threshold int) int {
 	return res
 }
 
-func (c *City) HasNeighbor(cn, weight int) bool {
-	if c == nil {
-		return true
-	}
-
-	if c.Number == cn {
-		return true
-	}
-
-	for _, nb := range c.neighbors {
-		if nb.City.Number == cn {
-			return true
-		}
-	}
-
-	return false
+func getRealIndex(n int) int {
+    if n == 0 {
+        return 0
+    }
+    return n - 1
 }
 
-func (c *City) AddNewNeighbor(n *City, weight int) {
-	if c.HasNeighbor(n.Number, weight) {
+func (c *City) UpdateNeighbor(cn, weight int) {
+	if c.neighbors[getRealIndex(cn)] == nil {
+        c.neighbors[getRealIndex(cn)] = &Neighbor{
+            Number: cn,
+            Weight: weight,
+        }
 		return
 	}
 
-	c.neighbors = append(c.neighbors, &Neighbor{
-		City:   n,
-		Weight: weight,
-	})
-}
-
-func (c *City) AddNeighbor(nb *Neighbor) {
-	if c.HasNeighbor(nb.City.Number, nb.Weight) {
-		return
+	cnb := c.neighbors[getRealIndex(cn)]
+	if weight < cnb.Weight {
+		cnb.Weight = weight
+        c.neighbors[getRealIndex(cn)] = cnb
 	}
-
-	c.neighbors = append(c.neighbors, nb)
 }
 
 func (c *City) Neighbors() []*Neighbor {
@@ -121,7 +109,7 @@ func (c *City) NeighborsInThreshold(threshold int) []*Neighbor {
 
 	res := make([]*Neighbor, 0)
 	for _, nb := range c.Neighbors() {
-		if nb.Weight <= threshold {
+		if nb != nil && nb.Weight <= threshold {
 			res = append(res, nb)
 		}
 	}
@@ -129,66 +117,54 @@ func (c *City) NeighborsInThreshold(threshold int) []*Neighbor {
 	return res
 }
 
-func NewCity(number int) *City {
+func NewCity(number, n int) *City {
 	return &City{
 		Number:    number,
-		neighbors: make([]*Neighbor, 0),
+		neighbors: make([]*Neighbor, n-1),
 	}
 }
 
 func findTheCity(n int, edges [][]int, distanceThreshold int) int {
 	cities := make([]*City, n)
 	for i := 0; i < n; i++ {
-		cities[i] = NewCity(i)
+		cities[i] = NewCity(i, n)
 	}
 
 	for i := 0; i < len(edges); i++ {
 		from, to, weight := edges[i][0], edges[i][1], edges[i][2]
 		fromCity := cities[from]
 		toCity := cities[to]
-		if weight <= distanceThreshold {
-			fromCity.AddNewNeighbor(toCity, weight)
-			toCity.AddNewNeighbor(fromCity, weight)
-		}
+		fromCity.UpdateNeighbor(to, weight)
+		toCity.UpdateNeighbor(from, weight)
 	}
 
-	seen := make(map[*Neighbor]bool)
-	queue := gods.NewPriorityQueue[*Neighbor]()
+	queue := gods.NewMinPriorityQueue[*Neighbor, int]()
 	for i := 0; i < n; i++ {
 		city := cities[i]
 		for _, nb := range city.Neighbors() {
-			queue.Push(nb, nb.Weight)
+			if nb != nil {
+				queue.Push(nb, nb.Weight)
+			}
 		}
 
 		for queue.Len() > 0 {
-			nb, err := queue.Pop()
-			if err != nil {
+			nb, prio, ok := queue.Pop()
+			if !ok {
 				break
 			}
 
-            if seen[nb] || nb.Weight >= distanceThreshold {
-                continue
-            }
+			for _, fnb := range cities[nb.Number].Neighbors() {
+                if fnb == nil {
+                    continue
+                }
 
-			for _, fnb := range nb.City.Neighbors() {
-				if seen[fnb] || fnb.Weight >= distanceThreshold {
-					continue
-				}
-
-				seen[fnb] = true
-
-				if (nb.Weight + fnb.Weight) <= distanceThreshold {
-					cnb := &Neighbor{
-						City:   fnb.City,
-						Weight: nb.Weight + fnb.Weight,
-					}
-					city.AddNeighbor(cnb)
-                    fnb.City.AddNewNeighbor(city, nb.Weight+fnb.Weight)
-                    queue.Push(cnb, cnb.Weight)
-				}
+				newWeight := prio + fnb.Weight
+                if newWeight <= distanceThreshold {
+					city.UpdateNeighbor(fnb.Number, newWeight)
+                    cities[fnb.Number].UpdateNeighbor(city.Number, newWeight)
+                }
 			}
 		}
-        clear(seen)
 	}
 
 	answer := cities[0]
