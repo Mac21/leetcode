@@ -79,18 +79,18 @@ func getRealIndex(n int) int {
 }
 
 func (c *City) UpdateNeighbor(cn, weight int) {
-	if c.neighbors[getRealIndex(cn)] == nil {
-        c.neighbors[getRealIndex(cn)] = &Neighbor{
+	if c.neighbors[cn] == nil {
+        c.neighbors[cn] = &Neighbor{
             Number: cn,
             Weight: weight,
         }
 		return
 	}
 
-	cnb := c.neighbors[getRealIndex(cn)]
+	cnb := c.neighbors[cn]
 	if weight < cnb.Weight {
 		cnb.Weight = weight
-        c.neighbors[getRealIndex(cn)] = cnb
+        c.neighbors[cn] = cnb
 	}
 }
 
@@ -102,26 +102,12 @@ func (c *City) Neighbors() []*Neighbor {
 	return c.neighbors
 }
 
-func (c *City) NeighborsInThreshold(threshold int) []*Neighbor {
-	if c == nil {
-		return nil
-	}
-
-	res := make([]*Neighbor, 0)
-	for _, nb := range c.Neighbors() {
-		if nb != nil && nb.Weight <= threshold {
-			res = append(res, nb)
-		}
-	}
-
-	return res
-}
 
 func NewCity(number, n int) *City {
-	return &City{
+    return &City{
 		Number:    number,
-		neighbors: make([]*Neighbor, n-1),
-	}
+		neighbors: make([]*Neighbor, n),
+    }
 }
 
 func findTheCity(n int, edges [][]int, distanceThreshold int) int {
@@ -139,7 +125,7 @@ func findTheCity(n int, edges [][]int, distanceThreshold int) int {
 	}
 
 	queue := gods.NewMinPriorityQueue[*Neighbor, int]()
-	for i := 0; i < n; i++ {
+	for i := 0; i < n-1; i++ {
 		city := cities[i]
 		for _, nb := range city.Neighbors() {
 			if nb != nil {
@@ -159,10 +145,8 @@ func findTheCity(n int, edges [][]int, distanceThreshold int) int {
                 }
 
 				newWeight := prio + fnb.Weight
-                if newWeight <= distanceThreshold {
-					city.UpdateNeighbor(fnb.Number, newWeight)
-                    cities[fnb.Number].UpdateNeighbor(city.Number, newWeight)
-                }
+                city.UpdateNeighbor(fnb.Number, newWeight)
+                cities[fnb.Number].UpdateNeighbor(city.Number, newWeight)
 			}
 		}
 	}
