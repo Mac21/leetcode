@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/mac21/gods"
 )
 
 /*
@@ -63,7 +61,7 @@ func (c *City) NumNeighborsInThreshold(threshold int) int {
 
 	res := 0
 	for _, nb := range c.neighbors {
-		if nb != nil && nb.Weight <= threshold {
+		if nb != nil && nb.Weight <= threshold && nb.Weight != 0 {
 			res++
 		}
 	}
@@ -72,25 +70,25 @@ func (c *City) NumNeighborsInThreshold(threshold int) int {
 }
 
 func getRealIndex(n int) int {
-    if n == 0 {
-        return 0
-    }
-    return n - 1
+	if n == 0 {
+		return 0
+	}
+	return n - 1
 }
 
 func (c *City) UpdateNeighbor(cn, weight int) {
 	if c.neighbors[cn] == nil {
-        c.neighbors[cn] = &Neighbor{
-            Number: cn,
-            Weight: weight,
-        }
+		c.neighbors[cn] = &Neighbor{
+			Number: cn,
+			Weight: weight,
+		}
 		return
 	}
 
 	cnb := c.neighbors[cn]
 	if weight < cnb.Weight {
 		cnb.Weight = weight
-        c.neighbors[cn] = cnb
+		c.neighbors[cn] = cnb
 	}
 }
 
@@ -102,12 +100,27 @@ func (c *City) Neighbors() []*Neighbor {
 	return c.neighbors
 }
 
-
 func NewCity(number, n int) *City {
-    return &City{
+	cty := &City{
 		Number:    number,
 		neighbors: make([]*Neighbor, n),
-    }
+	}
+
+	for i := range cty.neighbors {
+		if i == number {
+			cty.neighbors[i] = &Neighbor{
+				Number: i,
+				Weight: 0,
+			}
+		} else {
+			cty.neighbors[i] = &Neighbor{
+				Number: i,
+				Weight: 100000,
+			}
+		}
+	}
+
+	return cty
 }
 
 func findTheCity(n int, edges [][]int, distanceThreshold int) int {
@@ -124,29 +137,18 @@ func findTheCity(n int, edges [][]int, distanceThreshold int) int {
 		toCity.UpdateNeighbor(from, weight)
 	}
 
-	queue := gods.NewMinPriorityQueue[*Neighbor, int]()
-	for i := 0; i < n-1; i++ {
-		city := cities[i]
-		for _, nb := range city.Neighbors() {
-			if nb != nil {
-				queue.Push(nb, nb.Weight)
-			}
-		}
+	for k := 0; k < n; k++ {
+		for i := 0; i < n; i++ {
+			for j := 0; j < n; j++ {
+				distij := cities[i].Neighbors()[j]
+				distik := cities[i].Neighbors()[k]
+				distkj := cities[k].Neighbors()[j]
 
-		for queue.Len() > 0 {
-			nb, prio, ok := queue.Pop()
-			if !ok {
-				break
-			}
-
-			for _, fnb := range cities[nb.Number].Neighbors() {
-                if fnb == nil {
-                    continue
-                }
-
-				newWeight := prio + fnb.Weight
-                city.UpdateNeighbor(fnb.Number, newWeight)
-                cities[fnb.Number].UpdateNeighbor(city.Number, newWeight)
+				newWeight := distik.Weight + distkj.Weight
+				if distij.Weight > newWeight {
+					cities[i].UpdateNeighbor(distij.Number, newWeight)
+					cities[distij.Number].UpdateNeighbor(i, newWeight)
+				}
 			}
 		}
 	}
