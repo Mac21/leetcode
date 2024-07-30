@@ -34,6 +34,35 @@ n == rating.length
 1 <= rating[i] <= 105
 All the integers in rating are unique.
 */
+// O(n-1 * n)
+func numTeamsMostOptimal(rating []int) int {
+	n := len(rating)
+
+	teamCount := 0
+	for i := 0; i < n - 1; i++ {
+        leftmore, leftless , rightmore, rightless := 0, 0, 0, 0
+		for j := i + 1; j < n; j++ {
+            if rating[j] < rating[i] {
+                rightless++
+            } else if rating[j] > rating[i] {
+                rightmore++
+            }
+		}
+
+        for k := 0; k < i; k++ {
+            if rating[k] < rating[i] {
+                leftless++
+            }
+            if rating[k] > rating[i] {
+                leftmore++
+            }
+        }
+        teamCount += rightless * leftmore + leftless * rightmore
+	}
+	return teamCount
+}
+
+// O(n^3)
 func numTeams(rating []int) int {
 	n := len(rating)
 
