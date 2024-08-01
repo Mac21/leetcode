@@ -27,16 +27,19 @@ func minHeightShelves(books [][]int, shelfWidth int) int {
 	n := len(books)
 	bookHeights := make(map[int][]int)
 	for i, book := range books {
-		// heightSum := book[1]
+		heightSum := book[1]
 		width := book[0]
 		for j := i + 1; j < n; j++ {
-            bookHeights[book[1]] = append(bookHeights[book[1]], i, j)
-            bookHeights[book[1]+books[j][1]] = append(bookHeights[book[1]+books[j][1]], i, j)
+			if width > shelfWidth {
+                break
+            }
+            bookHeights[heightSum] = append(bookHeights[heightSum], i, j)
+            heightSum += books[j][1]
             width += books[j][0]
 		}
 	}
 
-	fmt.Println(bookHeights)
+	fmt.Println(n, bookHeights)
 
 	for h, index := range bookHeights {
 		if len(index) == 2 && index[0] == 1 {
