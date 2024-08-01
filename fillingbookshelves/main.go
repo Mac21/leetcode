@@ -1,0 +1,48 @@
+package main
+
+import "fmt"
+
+/*
+1105. Filling Bookcase Shelves Medium
+You are given an array books where books[i] = [thicknessi, heighti] indicates the thickness and height of the ith book. You are also given an integer shelfWidth.
+
+We want to place these books in order onto bookcase shelves that have a total width shelfWidth.
+
+We choose some of the books to place on this shelf such that the sum of their thickness is less than or equal to shelfWidth, then build another level of the shelf of the bookcase so that the total height of the bookcase has increased by the maximum height of the books we just put down. We repeat this process until there are no more books to place.
+
+Note that at each step of the above process, the order of the books we place is the same order as the given sequence of books.
+
+For example, if we have an ordered list of 5 books, we might place the first and second book onto the first shelf, the third book on the second shelf, and the fourth and fifth book on the last shelf.
+Return the minimum possible height that the total bookshelf can be after placing shelves in this manner.
+
+Constraints:
+
+1 <= books.length <= 1000
+1 <= thicknessi <= shelfWidth <= 1000
+1 <= heighti <= 1000
+
+Hint: Use dynamic programming: dp(i) will be the answer to the problem for books[i:].
+*/
+func minHeightShelves(books [][]int, shelfWidth int) int {
+	n := len(books)
+	bookHeights := make(map[int][]int)
+	for i, book := range books {
+		// heightSum := book[1]
+		width := book[0]
+		for j := i + 1; j < n; j++ {
+            bookHeights[book[1]] = append(bookHeights[book[1]], i, j)
+            bookHeights[book[1]+books[j][1]] = append(bookHeights[book[1]+books[j][1]], i, j)
+            width += books[j][0]
+		}
+	}
+
+	fmt.Println(bookHeights)
+
+	for h, index := range bookHeights {
+		if len(index) == 2 && index[0] == 1 {
+			return h
+		}
+	}
+
+	return n
+}
