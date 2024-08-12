@@ -39,25 +39,25 @@ func numTeamsMostOptimal(rating []int) int {
 	n := len(rating)
 
 	teamCount := 0
-	for i := 0; i < n - 1; i++ {
-        leftmore, leftless , rightmore, rightless := 0, 0, 0, 0
+	for i := 0; i < n-1; i++ {
+		leftmore, leftless, rightmore, rightless := 0, 0, 0, 0
 		for j := i + 1; j < n; j++ {
-            if rating[j] < rating[i] {
-                rightless++
-            } else if rating[j] > rating[i] {
-                rightmore++
-            }
+			if rating[j] < rating[i] {
+				rightless++
+			} else if rating[j] > rating[i] {
+				rightmore++
+			}
 		}
 
-        for k := 0; k < i; k++ {
-            if rating[k] < rating[i] {
-                leftless++
-            }
-            if rating[k] > rating[i] {
-                leftmore++
-            }
-        }
-        teamCount += rightless * leftmore + leftless * rightmore
+		for k := 0; k < i; k++ {
+			if rating[k] < rating[i] {
+				leftless++
+			}
+			if rating[k] > rating[i] {
+				leftmore++
+			}
+		}
+		teamCount += rightless*leftmore + leftless*rightmore
 	}
 	return teamCount
 }
@@ -67,7 +67,7 @@ func numTeams(rating []int) int {
 	n := len(rating)
 
 	teamCount := 0
-	for i := 0; i < n - 2; i++ {
+	for i := 0; i < n-2; i++ {
 		for j := i + 1; j < n; j++ {
 			for k := j + 1; k < n; k++ {
 				if ((rating[i] < rating[j]) && (rating[j] < rating[k])) || ((rating[i] > rating[j]) && (rating[j] > rating[k])) {
