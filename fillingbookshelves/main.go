@@ -1,6 +1,8 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 /*
 1105. Filling Bookcase Shelves Medium
@@ -26,19 +28,21 @@ Hint: Use dynamic programming: dp(i) will be the answer to the problem for books
 func minHeightShelves(books [][]int, shelfWidth int) int {
 	n := len(books)
 	indexHeights := make([]int, n)
-	indexHeights[0] = books[0][1]
-	for i := 0; i < n; i++ {
+	for i := 1; i < n; i++ {
 		width := books[i][0]
-        currentHeight := books[i][1]
+		currentHeight := books[i][1]
+		// Height of book on next level
+		indexHeights[i] = currentHeight + indexHeights[i-1]
 		for j := 0; j < i; j++ {
-            width += books[j][0]
+			width += books[j][0]
 			if width > shelfWidth {
-                break
+				break
 			}
 
-            currentHeight = min(books[j][1]+indexHeights[i-j], books[i][1]+indexHeights[i-j])
+			currentHeight = max(currentHeight, books[j][1])
+
+			indexHeights[i] = min(indexHeights[i-j], currentHeight+indexHeights[i-j])
 		}
-		indexHeights[i] = currentHeight
 	}
 
 	fmt.Println(indexHeights)
