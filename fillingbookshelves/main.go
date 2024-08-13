@@ -25,27 +25,23 @@ Hint: Use dynamic programming: dp(i) will be the answer to the problem for books
 */
 func minHeightShelves(books [][]int, shelfWidth int) int {
 	n := len(books)
-	bookHeights := make(map[int][]int)
-	for i, book := range books {
-		heightSum := book[1]
-		width := book[0]
-		for j := i + 1; j < n; j++ {
+	indexHeights := make([]int, n)
+	indexHeights[0] = books[0][1]
+	for i := 0; i < n; i++ {
+		width := books[i][0]
+        currentHeight := books[i][1]
+		for j := 0; j < i; j++ {
+            width += books[j][0]
 			if width > shelfWidth {
                 break
-            }
-            bookHeights[heightSum] = append(bookHeights[heightSum], i, j)
-            heightSum += books[j][1]
-            width += books[j][0]
+			}
+
+            currentHeight = min(books[j][1]+indexHeights[i-j], books[i][1]+indexHeights[i-j])
 		}
+		indexHeights[i] = currentHeight
 	}
 
-	fmt.Println(n, bookHeights)
+	fmt.Println(indexHeights)
 
-	for h, index := range bookHeights {
-		if len(index) == 2 && index[0] == 1 {
-			return h
-		}
-	}
-
-	return n
+	return indexHeights[n-1]
 }
