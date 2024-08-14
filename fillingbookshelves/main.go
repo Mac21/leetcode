@@ -24,8 +24,7 @@ Constraints:
 Hint: Use dynamic programming: dp(i) will be the answer to the problem for books[i:].
 */
 
-// 1) put book on this shelf
-// 2) put book on next shelf
+// Bottom up optimal solution
 func minHeightShelves(books [][]int, shelfWidth int) int {
 	n := len(books)
 	dp := make([]int, n+1)
@@ -47,4 +46,38 @@ func minHeightShelves(books [][]int, shelfWidth int) int {
 	}
 
 	return dp[n]
+}
+
+// Top down recursive dp solution
+func minHeightShelvesTopDown(books [][]int, shelfWidth int) int {
+    n := len(books)
+	cache := make(map[int]int)
+	var dp func(i int) int
+	dp = func(i int) int {
+		if i == n {
+			return 0
+		}
+
+		if h, exists := cache[i]; exists {
+			return h
+		}
+
+		currentHeight := 0
+		remainingWidth := shelfWidth
+		cache[i] = math.MaxInt
+		for j := i; j < n; j++ {
+			w, h := books[j][0], books[j][1]
+			if remainingWidth < w {
+				break
+			}
+			remainingWidth -= w
+
+			currentHeight = max(currentHeight, h)
+			cache[i] = min(cache[i], currentHeight+dp(j+1))
+		}
+
+		return cache[i]
+	}
+
+	return dp(0)
 }
