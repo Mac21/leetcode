@@ -1,8 +1,6 @@
 package main
 
-import (
-	"fmt"
-)
+import "fmt"
 
 /*
 1105. Filling Bookcase Shelves Medium
@@ -25,27 +23,28 @@ Constraints:
 
 Hint: Use dynamic programming: dp(i) will be the answer to the problem for books[i:].
 */
+
+// 1) put book on this shelf
+// 2) put book on next shelf
 func minHeightShelves(books [][]int, shelfWidth int) int {
 	n := len(books)
-	indexHeights := make([]int, n)
-	for i := 1; i < n; i++ {
-		width := books[i][0]
-		currentHeight := books[i][1]
-		// Height of book on next level
-		indexHeights[i] = currentHeight + indexHeights[i-1]
-		for j := 0; j < i; j++ {
-			width += books[j][0]
-			if width > shelfWidth {
+	dp := make([]int, n+1)
+	for i := 1; i <= n; i++ {
+		remainingWidth := shelfWidth
+		maxHeight := 0
+		dp[i] = 10000
+		for j := i; j > 0; j-- {
+			w, h := books[j-1][0], books[j-1][1]
+			if remainingWidth < w {
 				break
 			}
+			remainingWidth -= w
 
-			currentHeight = max(currentHeight, books[j][1])
-
-			indexHeights[i] = min(indexHeights[i-j], currentHeight+indexHeights[i-j])
+			maxHeight = max(maxHeight, h)
+            // current shelf height is the minimum of the current shelf height and the current book on the previous shelf
+			dp[i] = min(dp[i], maxHeight+dp[j-1])
 		}
 	}
 
-	fmt.Println(indexHeights)
-
-	return indexHeights[n-1]
+	return dp[n]
 }
