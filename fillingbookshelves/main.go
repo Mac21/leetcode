@@ -1,5 +1,7 @@
 package main
 
+import "math"
+
 /*
 1105. Filling Bookcase Shelves Medium
 You are given an array books where books[i] = [thicknessi, heighti] indicates the thickness and height of the ith book. You are also given an integer shelfWidth.
@@ -30,7 +32,7 @@ func minHeightShelves(books [][]int, shelfWidth int) int {
 	for i := 1; i <= n; i++ {
 		remainingWidth := shelfWidth
 		maxHeight := 0
-		dp[i] = 10000
+		dp[i] = math.MaxInt
 		for j := i; j > 0; j-- {
 			w, h := books[j-1][0], books[j-1][1]
 			if remainingWidth < w {
