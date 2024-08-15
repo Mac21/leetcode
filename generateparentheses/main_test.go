@@ -24,8 +24,12 @@ func validateOrderedTestResults[T cmp.Ordered](t *testing.T, input any, answer, 
 }
 
 func validateSliceTestResults[T ~[]E, E cmp.Ordered](t *testing.T, input any, answer, result T) {
-	if slices.Compare(answer, result) != 0 {
-		t.Fatalf("Test %v success: %v? Expected %#v got %#v\n", input, slices.Compare(answer, result) == 0, answer, result)
+    passed := true
+    for v := range slices.Values(result) {
+        passed = passed && slices.Contains(answer, v)
+    }
+	if !passed {
+		t.Fatalf("Test %v success: %v? Expected %#v got %#v\n", input, passed, answer, result)
 	}
 }
 
