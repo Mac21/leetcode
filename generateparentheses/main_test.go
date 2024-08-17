@@ -24,16 +24,8 @@ func validateOrderedTestResults[T cmp.Ordered](t *testing.T, input any, answer, 
 }
 
 func validateSliceTestResults[T ~[]E, E cmp.Ordered](t *testing.T, input any, answer, result T) {
-	passed := len(answer) == len(result)
-	for v := range slices.Values(result) {
-		if !passed {
-			break
-		}
-
-		hasv := slices.Contains(answer, v)
-		passed = passed && hasv
-	}
-	if !passed {
+	passed := slices.Compare(answer, result)
+	if passed != 0 {
 		t.Fatalf("Test %v success: %v? Expected %#v got %#v\n", input, passed, answer, result)
 	}
 }
@@ -46,7 +38,7 @@ func TestLeetcodeExample1(t *testing.T) {
 }
 
 func TestLeetcodeExampleN2(t *testing.T) {
-	answer := []string{"()()", "(())"}
+	answer := []string{"(())", "()()"}
 	n := 2
 	result := generateParenthesis(n)
 	validateSliceTestResults(t, n, answer, result)
