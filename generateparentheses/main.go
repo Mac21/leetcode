@@ -20,32 +20,24 @@ Constraints:
 
 1 <= n <= 8
 */
-var dp func(i int) []string
+var dp func(l, r int, s string)
 
 func generateParenthesis(n int) []string {
-	cache := make([]string, 2)
-	cache[0] = ""
-	cache[1] = "()"
-	dp = func(i int) []string {
-		if i > 0 && i < len(cache) {
-			return cache[i : i+1]
+	res := make([]string, 0)
+	dp = func(l, r int, s string) {
+		if l == 0 && r == 0 {
+			res = append(res, s)
+			return
 		}
 
-		pp := dp(i - 1)
-		currentLevelCacheIndex := len(cache)
-		for _, p := range pp {
-			nest := "(" + p + ")"
-			cache = append(cache, nest)
-			concatf := "()" + p
-			if nest != concatf {
-				cache = append(cache, concatf)
-			}
-			concatb := p + "()"
-			if concatf != concatb {
-				cache = append(cache, concatb)
-			}
+		if l > 0 {
+			dp(l-1, r, s+"(")
 		}
-		return cache[currentLevelCacheIndex:]
+
+		if r > l {
+			dp(l, r-1, s+")")
+		}
 	}
-	return dp(n)
+	dp(n, n, "")
+	return res
 }
