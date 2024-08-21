@@ -6,6 +6,12 @@ import (
     "slices"
 )
 
+type Input[T ~[]comparable | ~comparable] struct {
+    Initial  T
+    Expected T
+    Answer T
+}
+
 func validateTestResults[T comparable](t *testing.T, input any, answer, result T) {
     if answer != result {
         t.Fatalf("Test: %v success: %v? Expected %v got %v\n", input, answer == result, answer, result)
@@ -25,8 +31,8 @@ func validateSliceTestResults[T ~[]E, E cmp.Ordered](t *testing.T, input any, an
 }
 
 func TestExample(t *testing.T) {
-    input := []int{3, -1, 2}
-    answer := []int{-1, 2, 3}
-    result := problem(input)
-    validateSliceTestResults(t, input, answer, result)
+    input := Input{
+    }
+    result := problem(input.Initial)
+    validateSliceTestResults(t, input, input.Expected, result)
 }
