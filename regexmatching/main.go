@@ -1,7 +1,6 @@
 package main
 
 import (
-	"slices"
 	"strings"
 )
 
@@ -45,24 +44,25 @@ type State struct {
 	Right *State
 }
 
-func follows(s *State) []*State {
+func follows_helper(s *State, cache *map[*State]bool) {
 	if s == nil {
-		return nil
+		return
 	}
 
-	states := make([]*State, 1)
-	states[0] = s
+	if (*cache)[s] {
+		return
+	}
+
+	(*cache)[s] = true
 
 	if s.Label == 0 {
 		if s.Left != nil {
-			states = append(states, follows(s.Left)...)
+			follows_helper(s.Left, cache)
 		}
 		if s.Right != nil {
-			states = append(states, follows(s.Right)...)
+			follows_helper(s.Right, cache)
 		}
 	}
-
-	return states
 }
 
 type Regex struct {
@@ -71,28 +71,24 @@ type Regex struct {
 }
 
 func (r Regex) Match(in string) bool {
-	next := make([]*State, 0)
-	current := follows(r.Initial)
-	alreadyOn := make(map[*State]bool, len(current))
-	for _, c := range in {
-		for _, s := range current {
+	current := make(map[*State]bool)
+	next := make(map[*State]bool)
+	follows_helper(r.Initial, &current)
+	for i, c := range in {
+		for s := range current {
 			if s.Label == '.' || s.Label == c {
-				for _, ns := range follows(s.Left) {
-					if !alreadyOn[ns] {
-						alreadyOn[ns] = true
-						next = append(next, ns)
-					}
-				}
+				follows_helper(s.Left, &next)
 			}
 		}
-		current = next
-		next = make([]*State, 0)
-        for k, _ := range alreadyOn {
-            alreadyOn[k] = false
-        }
+		if i < len(in)-1 {
+            temp := current
+			current = next
+            clear(temp)
+			next = temp
+		}
 	}
 
-	return slices.Contains(current, r.Accept)
+	return next[r.Accept]
 }
 
 // Transforms re from ab to a+b so that shunting yard algorithm has concat op
@@ -100,14 +96,14 @@ func transform(re string) string {
 	var sb strings.Builder
 	sb.WriteByte(re[0])
 	for i := 1; i < len(re); i++ {
-        pc := re[i-1]
+		pc := re[i-1]
 		c := re[i]
-		switch {
-		case c == '*':
-            // If we're seeing a * and the previous character was a * skip.
-            if pc == '*' {
-                continue
-            }
+		switch c {
+		case '*':
+			// If we're seeing a * and the previous character was a * skip.
+			if pc == '*' {
+				continue
+			}
 			sb.WriteByte(c)
 			continue
 		default:
@@ -156,7 +152,7 @@ func compile(postfix string) Regex {
 			re := nfas[len(nfas)-1]
 			nfas = nfas[:len(nfas)-1]
 
-			a := &State{}
+			a := new(State)
 			i := &State{
 				Left:  re.Initial,
 				Right: a,
@@ -182,7 +178,7 @@ func compile(postfix string) Regex {
 				Accept:  re2.Accept,
 			})
 		default:
-			a := &State{}
+			a := new(State)
 			i := &State{
 				Label: c,
 				Left:  a,
@@ -193,9 +189,7 @@ func compile(postfix string) Regex {
 			})
 		}
 	}
-	re := nfas[len(nfas)-1]
-	nfas = nil
-	return re
+	return nfas[len(nfas)-1]
 }
 
 func NewRegex(re string) Regex {
