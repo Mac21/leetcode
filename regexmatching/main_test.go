@@ -70,12 +70,12 @@ func TestCase4(t *testing.T) {
     validateTestResults(t, input, input.Answer, result)
 }
 
-//func TestCase5(t *testing.T) {
-//    input := Input{
-//        Intial: "abc",
-//        Pattern: "a***abc",
-//        Answer: true,
-//    }
-//    result := isMatch(input.Intial, input.Pattern)
-//    validateTestResults(t, input, input.Answer, result)
-//}
+func TestCase5(t *testing.T) {
+   input := Input{
+       Intial: "abc",
+       Pattern: "a***abc",
+       Answer: true,
+   }
+   result := isMatch(input.Intial, input.Pattern)
+   validateTestResults(t, input, input.Answer, result)
+}

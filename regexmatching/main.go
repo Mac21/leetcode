@@ -87,7 +87,9 @@ func (r Regex) Match(in string) bool {
 		}
 		current = next
 		next = make([]*State, 0)
-		clear(alreadyOn)
+        for k, _ := range alreadyOn {
+            alreadyOn[k] = false
+        }
 	}
 
 	return slices.Contains(current, r.Accept)
@@ -98,9 +100,14 @@ func transform(re string) string {
 	var sb strings.Builder
 	sb.WriteByte(re[0])
 	for i := 1; i < len(re); i++ {
+        pc := re[i-1]
 		c := re[i]
 		switch {
 		case c == '*':
+            // If we're seeing a * and the previous character was a * skip.
+            if pc == '*' {
+                continue
+            }
 			sb.WriteByte(c)
 			continue
 		default:
