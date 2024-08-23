@@ -39,7 +39,7 @@ It is guaranteed for each appearance of the character '*', there will be a previ
 */
 
 type State struct {
-	Label rune
+	Label byte
 	Left  *State
 	Right *State
 }
@@ -76,12 +76,12 @@ func (r Regex) Match(in string) bool {
 	follows_helper(r.Initial, &current)
 	for i, c := range in {
 		for s := range current {
-			if s.Label == '.' || s.Label == c {
+			if s.Label == '.' || s.Label == byte(c) {
 				follows_helper(s.Left, &next)
 			}
 		}
 		if i < len(in)-1 {
-            temp := current
+			temp := current
 			current = next
             clear(temp)
 			next = temp
@@ -92,20 +92,21 @@ func (r Regex) Match(in string) bool {
 }
 
 // Transforms re from ab to a+b so that shunting yard algorithm has concat op
+// also apply a minimal optimization by removing any consecutive klenee star
+// e.g. a***b -> a*+b
 func transform(re string) string {
 	var sb strings.Builder
 	sb.WriteByte(re[0])
 	for i := 1; i < len(re); i++ {
-		pc := re[i-1]
 		c := re[i]
 		switch c {
 		case '*':
 			// If we're seeing a * and the previous character was a * skip.
-			if pc == '*' {
+			if re[i-1] == '*' {
 				continue
 			}
+
 			sb.WriteByte(c)
-			continue
 		default:
 			sb.WriteByte('+')
 			sb.WriteByte(c)
@@ -144,12 +145,13 @@ func shunt(re string) string {
 	return output.String()
 }
 
-func compile(postfix string) Regex {
-	nfas := make([]Regex, 0)
+func compile(postfix string) *Regex {
+	nfas := make([]*Regex, 0)
 	for _, c := range postfix {
 		switch c {
 		case '*':
 			re := nfas[len(nfas)-1]
+			nfas[len(nfas)-1] = nil
 			nfas = nfas[:len(nfas)-1]
 
 			a := new(State)
@@ -160,30 +162,32 @@ func compile(postfix string) Regex {
 			re.Accept.Left = re.Initial
 			re.Accept.Right = a
 
-			nfas = append(nfas, Regex{
+			nfas = append(nfas, &Regex{
 				Initial: i,
 				Accept:  a,
 			})
 		case '+':
 			re2 := nfas[len(nfas)-1]
+			nfas[len(nfas)-1] = nil
 			nfas = nfas[:len(nfas)-1]
 
 			re1 := nfas[len(nfas)-1]
+			nfas[len(nfas)-1] = nil
 			nfas = nfas[:len(nfas)-1]
 
 			re1.Accept.Left = re2.Initial
 
-			nfas = append(nfas, Regex{
+			nfas = append(nfas, &Regex{
 				Initial: re1.Initial,
 				Accept:  re2.Accept,
 			})
 		default:
 			a := new(State)
 			i := &State{
-				Label: c,
+				Label: byte(c),
 				Left:  a,
 			}
-			nfas = append(nfas, Regex{
+			nfas = append(nfas, &Regex{
 				Initial: i,
 				Accept:  a,
 			})
@@ -192,7 +196,7 @@ func compile(postfix string) Regex {
 	return nfas[len(nfas)-1]
 }
 
-func NewRegex(re string) Regex {
+func NewRegex(re string) *Regex {
 	postfix := shunt(re)
 	return compile(postfix)
 }
