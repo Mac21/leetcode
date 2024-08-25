@@ -185,14 +185,16 @@ func compile(postfix string) *Regex {
 		case '*':
 			re := nfas.pop()
 
+			a := new(State)
 			i := &State{
 				Left:  re.Initial,
-				Right: re.Accept,
+				Right: a,
 			}
 			re.Accept.Left = re.Initial
-			re.Accept.Right = i
+			re.Accept.Right = a
 
 			re.Initial = i
+			re.Accept = a
 
 			nfas.next()
 		case '+':
