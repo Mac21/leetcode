@@ -39,22 +39,21 @@ It is guaranteed for each appearance of the character '*', there will be a previ
 */
 
 type State struct {
-	Label byte
+	Label rune
 	Left  *State
 	Right *State
 }
 
 func follows_helper(s *State, cache *map[*State]bool) {
-	if s == nil {
-		return
-	}
-
 	if (*cache)[s] {
 		return
 	}
 
-	(*cache)[s] = true
+	if s == nil {
+		return
+	}
 
+	(*cache)[s] = true
 	if s.Label == 0 {
 		if s.Left != nil {
 			follows_helper(s.Left, cache)
@@ -76,18 +75,17 @@ func (r Regex) Match(in string) bool {
 	follows_helper(r.Initial, &current)
 	for i, c := range in {
 		for s := range current {
-			if s.Label == '.' || s.Label == byte(c) {
+			if s.Label == '.' || s.Label == c {
 				follows_helper(s.Left, &next)
 			}
 		}
 		if i < len(in)-1 {
 			temp := current
 			current = next
-            clear(temp)
+			clear(temp)
 			next = temp
 		}
 	}
-
 	return next[r.Accept]
 }
 
@@ -145,55 +143,80 @@ func shunt(re string) string {
 	return output.String()
 }
 
+type stack[T any] struct {
+	items []T
+	count int
+}
+
+func (s *stack[T]) head() *T {
+	// Reallocate items
+	if s.count >= len(s.items) {
+		ni := make([]T, len(s.items)*2)
+		copy(ni, s.items)
+		s.items = ni
+	}
+
+	return &s.items[s.count]
+}
+
+func (s *stack[T]) next() {
+	s.count++
+}
+
+func (s *stack[T]) pop() *T {
+	if s.count < 0 {
+		return nil
+	}
+	s.count--
+	return &s.items[s.count]
+}
+
+func newStack[T any]() *stack[T] {
+	return &stack[T]{
+		items: make([]T, 3),
+		count: 0,
+	}
+}
+
 func compile(postfix string) *Regex {
-	nfas := make([]*Regex, 0)
+	nfas := newStack[Regex]()
 	for _, c := range postfix {
 		switch c {
 		case '*':
-			re := nfas[len(nfas)-1]
-			nfas[len(nfas)-1] = nil
-			nfas = nfas[:len(nfas)-1]
+			re := nfas.pop()
 
-			a := new(State)
 			i := &State{
 				Left:  re.Initial,
-				Right: a,
+				Right: re.Accept,
 			}
 			re.Accept.Left = re.Initial
-			re.Accept.Right = a
+			re.Accept.Right = i
 
-			nfas = append(nfas, &Regex{
-				Initial: i,
-				Accept:  a,
-			})
+			re.Initial = i
+
+			nfas.next()
 		case '+':
-			re2 := nfas[len(nfas)-1]
-			nfas[len(nfas)-1] = nil
-			nfas = nfas[:len(nfas)-1]
-
-			re1 := nfas[len(nfas)-1]
-			nfas[len(nfas)-1] = nil
-			nfas = nfas[:len(nfas)-1]
+			re2 := nfas.pop()
+			re1 := nfas.pop()
 
 			re1.Accept.Left = re2.Initial
+			re1.Accept = re2.Accept
 
-			nfas = append(nfas, &Regex{
-				Initial: re1.Initial,
-				Accept:  re2.Accept,
-			})
+			nfas.next()
 		default:
 			a := new(State)
 			i := &State{
-				Label: byte(c),
+				Label: c,
 				Left:  a,
 			}
-			nfas = append(nfas, &Regex{
-				Initial: i,
-				Accept:  a,
-			})
+
+			nr := nfas.head()
+			nr.Initial = i
+			nr.Accept = a
+			nfas.next()
 		}
 	}
-	return nfas[len(nfas)-1]
+	return nfas.pop()
 }
 
 func NewRegex(re string) *Regex {
