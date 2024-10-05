@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -111,20 +112,48 @@ var romanValues = []*Roman{
 	},
 }
 
+func firstDigit(num int) (int, int) {
+    if num < 10 {
+        return num, 0
+    }
+
+	numDivs := 0
+	for num > 0 {
+		numDivs += 1
+		temp := num / 10
+		if temp == 0 {
+			break
+		}
+		num = temp
+	}
+
+	return num, numDivs
+}
+
 func intToRoman(num int) string {
+	if num < 1 {
+		return ""
+	}
+
 	var res strings.Builder
 	for i, r := range romanValues {
-		switch num {
+		if num < 1 {
+			break
+		}
+		fd, divs := firstDigit(num)
+		fmt.Println(num, r, fd, divs)
+
+		switch fd {
 		case 9:
-			res.WriteString(string(romanValues[len(romanValues)-1].char) + string(romanValues[len(romanValues)-3].char))
-			num -= 9
-			continue
+			fc := romanValues[len(romanValues)-divs-1]
+			sc := romanValues[len(romanValues)-divs-2]
+			res.WriteString(string(fc.char) + string(sc.char))
+			num -= sc.value - fc.value
 		case 4:
-			res.WriteString(string(romanValues[len(romanValues)-1].char) + string(romanValues[len(romanValues)-2].char))
-			num -= 4
-			continue
-		case 0:
-			continue
+			fc := romanValues[len(romanValues)-divs-1]
+			sc := romanValues[len(romanValues)-divs-2]
+			res.WriteString(string(fc.char) + string(sc.char))
+			num -= sc.value - fc.value
 		default:
 			count := num / r.value
 			num = num % r.value

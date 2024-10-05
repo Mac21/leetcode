@@ -55,3 +55,21 @@ func TestCase3(t *testing.T) {
     result := intToRoman(input.Initial)
     validateTestResults(t, input, input.Expected, result)
 }
+
+func TestSubtractiveFormSmall(t *testing.T) {
+    input := Input{
+        Initial: 49,
+        Expected: "XLIX",
+    }
+    result := intToRoman(input.Initial)
+    validateTestResults(t, input, input.Expected, result)
+}
+
+func TestSubtractiveLarge(t *testing.T) {
+    input := Input{
+        Initial: 999,
+        Expected: "CMXCIX",
+    }
+    result := intToRoman(input.Initial)
+    validateTestResults(t, input, input.Expected, result)
+}
