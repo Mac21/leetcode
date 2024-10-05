@@ -112,6 +112,9 @@ var romanValues = []*Roman{
 	},
 }
 
+// firstDigit returns the leftmost number and how many times the number was divided by 10
+// e.g. num = 49
+// firstDigit(49) -> (4, 1)
 func firstDigit(num int) (int, int) {
     if num < 10 {
         return num, 0
@@ -119,11 +122,11 @@ func firstDigit(num int) (int, int) {
 
 	numDivs := 0
 	for num > 0 {
-		numDivs += 1
 		temp := num / 10
 		if temp == 0 {
 			break
 		}
+		numDivs += 1
 		num = temp
 	}
 
