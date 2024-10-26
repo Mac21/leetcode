@@ -69,56 +69,68 @@ Constraints:
 */
 
 type Roman struct {
-	char  byte
+	char  string
 	value int
-	place int
 }
 
 var romanValues = []*Roman{
 	{
-		char:  'M',
+		char:  "M",
 		value: 1000,
-		place: 2,
 	},
 	{
-		char:  'D',
+		char:  "D",
 		value: 500,
-		place: 1,
 	},
 	{
-		char:  'C',
+		char:  "C",
 		value: 100,
-		place: 1,
 	},
 	{
-		char:  'L',
+		char:  "L",
 		value: 50,
-		place: 0,
 	},
 	{
-		char:  'X',
+		char:  "X",
 		value: 10,
-		place: 0,
 	},
 	{
-		char:  'V',
+		char:  "V",
 		value: 5,
-		place: 0,
 	},
 	{
-		char:  'I',
+		char:  "I",
 		value: 1,
-		place: 0,
 	},
+}
+
+// Only the following subtractive forms are used: 4 (IV), 9 (IX), 40 (XL), 90 (XC), 400 (CD) and 900 (CM).
+func getSubtractiveForm(cd *Roman) (string, int) {
+	switch cd.char {
+	case "M":
+		return "CM", 900
+	case "D":
+		return "CD", 400
+	case "C":
+		return "XC", 90
+	case "L":
+		return "XL", 40
+	case "X":
+		return "IX", 9
+	case "V":
+		return "IV", 4
+	default:
+		return "", 0
+	}
 }
 
 // firstDigit returns the leftmost number and how many times the number was divided by 10
 // e.g. num = 49
 // firstDigit(49) -> (4, 1)
 func firstDigit(num int) (int, int) {
-    if num < 10 {
-        return num, 0
-    }
+	if num < 10 {
+		return num, 0
+	}
 
 	numDivs := 0
 	for num > 0 {
@@ -146,28 +158,21 @@ func intToRoman(num int) string {
 		fd, divs := firstDigit(num)
 		fmt.Println(num, r, fd, divs)
 
-		switch fd {
-		case 9:
-			fc := romanValues[len(romanValues)-divs-1]
-			sc := romanValues[len(romanValues)-divs-2]
-			res.WriteString(string(fc.char) + string(sc.char))
-			num -= sc.value - fc.value
-		case 4:
-			fc := romanValues[len(romanValues)-divs-1]
-			sc := romanValues[len(romanValues)-divs-2]
-			res.WriteString(string(fc.char) + string(sc.char))
-			num -= sc.value - fc.value
-		default:
+		ch, val := getSubtractiveForm(r)
+		if val <= num && (fd == 9 || fd == 4) {
+			res.WriteString(ch)
+			num -= val
+		} else {
 			count := num / r.value
 			num = num % r.value
 			// Need to use subtractive form
 			if count <= 3 {
 				for range count {
-					res.WriteByte(r.char)
+					res.WriteString(r.char)
 				}
 			} else {
 				if count == 4 {
-					res.WriteString(string(r.char) + string(romanValues[i-1].char))
+					res.WriteString(r.char + romanValues[i-1].char)
 				}
 			}
 		}
